@@ -78,6 +78,27 @@ def placeCall():
     call = client.calls.create(url=request.url_root + 'incoming', to='client:' + to, from_=CALLER_ID)
   return str(call)
 
+@app.route('/outgoing', methods=['GET', 'POST'])
+def outgoing():
+  resp = twilio.twiml.Response()
+  from_value = request.values.get('From')
+  caller = request.values.get('Caller')
+  caller_value=caller[7:]
+  to = request.values.get('To')
+  
+  if not (from_value and to):
+    resp.say("Invalid request")
+    return str(resp)
+
+  if to.startswith("client:"):
+    # client -> client
+    resp.dial(callerId=from_value).client(to[7:])
+  elif to.startswith("number:"):
+    resp.dial(callerId=caller_value).number(to[7:])
+  else:
+    resp.say("Invalid request")
+  return str(resp)
+
 """
 Creates an endpoint that can be used in your TwiML App as the Voice Request Url.
 
